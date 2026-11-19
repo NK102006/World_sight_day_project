@@ -3,3 +3,10 @@ dist/
 # Doctors' uploaded photos, downloaded portraits and records: personal data, never commit
 storage/
 
+
+# Server credentials and local configuration
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

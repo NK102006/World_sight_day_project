@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
 const page = (p) => fileURLToPath(new URL(p, import.meta.url));
 
-export default defineConfig({
-  base: './',
+export default defineConfig(({ mode }) => ({
+  base: loadEnv(mode, process.cwd(), '').APP_BASE_PATH || '/',
   plugins: [react()],
   server: { port: 5173 },
   build: {
@@ -21,4 +21,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

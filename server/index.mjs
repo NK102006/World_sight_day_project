@@ -50,7 +50,9 @@ import { openDatabase } from './db.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DEV = process.argv.includes('--dev');
-const PORT = Number(process.env.PORT) || (DEV ? 5173 : 3000);
+const PORT = Number(process.env.PORT) || (DEV ? 5173 : 4015);
+const BASE = '/' + (process.env.APP_BASE_PATH || '/').split('/').filter(Boolean).join('/');
+const PREFIX = BASE === '/' ? '' : BASE;
 const STORAGE = path.resolve(ROOT, process.env.STORAGE_DIR || 'storage');
 const PHOTO_DIR = path.join(STORAGE, '1.photo');
 const DOWNLOAD_DIR = path.join(STORAGE, '2.Downloaded Image');
@@ -86,9 +88,13 @@ async function saveUnique(dir, base, ext, data) {
 // ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
-const app = express();
-app.disable('x-powered-by');
-const server = http.createServer(app);
+const host = express();
+host.disable('x-powered-by');
+host.set('trust proxy', 'loopback');
+const app = express.Router();
+if (PREFIX) host.get(PREFIX, (req, res, next) => req.path === PREFIX ? res.redirect(301, `${PREFIX}/${req.url.slice(req.path.length)}`) : next());
+host.use(PREFIX || '/', app);
+const server = http.createServer(host);
 
 const imageBody = express.raw({ type: 'image/*', limit: '25mb' });
 const jsonBody = express.json({ limit: '4kb' });
@@ -156,14 +162,14 @@ app.post('/api/login', jsonBody, (req, res) => {
   failures.delete(ip);
   const token = crypto.randomBytes(32).toString('hex');
   db.addSession(tokenHash(token), row.id, Date.now() + USER_SESSION_MS, now());
-  res.set('Set-Cookie', `${USER_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${USER_SESSION_MS / 1000}${secureFlag(req)}`);
+  res.set('Set-Cookie', `${USER_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=${PREFIX || "/"}; Max-Age=${USER_SESSION_MS / 1000}${secureFlag(req)}`);
   res.json({ ok: true, user: db.getUser(row.id) });
 });
 
 app.post('/api/logout', (req, res) => {
   const token = readCookie(req, USER_COOKIE);
   if (token) db.deleteSession(tokenHash(token));
-  res.set('Set-Cookie', `${USER_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
+  res.set('Set-Cookie', `${USER_COOKIE}=; HttpOnly; SameSite=Lax; Path=${PREFIX || "/"}; Max-Age=0`);
   res.json({ ok: true });
 });
 
@@ -282,14 +288,14 @@ function requireAdmin(req, res, next) {
   if (!ADMIN_PASSWORD) return res.status(503).json({ error: 'locked' });
   if (isSignedIn(req)) return next();
   // A file link opened in the browser (e.g. from the CSV) while signed out: show the sign-in page
-  if (req.method === 'GET' && req.originalUrl.startsWith('/admin/files/') && req.accepts(['html', 'json']) === 'html') {
-    return res.redirect('/admin/');
+  if (req.method === 'GET' && req.originalUrl.startsWith(`${PREFIX}/admin/files/`) && req.accepts(['html', 'json']) === 'html') {
+    return res.redirect(`${PREFIX}/admin/`);
   }
   res.status(401).json({ error: 'sign-in required' });
 }
 
 // "/admin" -> "/admin/" (Express also matches "/admin/" here, so check the exact path to avoid a loop)
-app.get('/admin', (req, res, next) => (req.originalUrl.split('?')[0] === '/admin' ? res.redirect(301, '/admin/') : next()));
+app.get('/admin', (req, res, next) => (req.path === '/admin' ? res.redirect(301, `${PREFIX}/admin/`) : next()));
 
 app.post('/admin/api/login', jsonBody, (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).json({ error: 'locked' });
@@ -303,13 +309,13 @@ app.post('/admin/api/login', jsonBody, (req, res) => {
   failures.delete(ip);
   const token = crypto.randomBytes(32).toString('hex');
   sessions.set(token, Date.now() + SESSION_MS);
-  res.set('Set-Cookie', `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/admin; Max-Age=${SESSION_MS / 1000}${secureFlag(req)}`);
+  res.set('Set-Cookie', `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=${PREFIX}/admin; Max-Age=${SESSION_MS / 1000}${secureFlag(req)}`);
   res.json({ ok: true });
 });
 
 app.post('/admin/api/logout', (req, res) => {
   sessions.delete(cookieValue(req));
-  res.set('Set-Cookie', `${SESSION_COOKIE}=; HttpOnly; SameSite=Strict; Path=/admin; Max-Age=0`);
+  res.set('Set-Cookie', `${SESSION_COOKIE}=; HttpOnly; SameSite=Strict; Path=${PREFIX}/admin; Max-Age=0`);
   res.json({ ok: true });
 });
 
@@ -355,7 +361,7 @@ app.get('/admin/api/export.csv', (req, res) => {
     const p2 = (n) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
   };
-  const site = `${req.protocol}://${req.get('host')}`;
+  const site = `${req.protocol}://${req.get('host')}${PREFIX}`;
   const userNames = new Map(db.listUsers().map((u) => [u.id, u.displayName || u.username]));
 
   const header = ['User', 'Doctor name', 'Caption', 'Status', 'Entry', 'Date', 'Eye colour', 'Frame', 'File name', 'Open in browser'];
@@ -513,7 +519,7 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 const PAGES = { '/': 'index.html', '/studio/': 'studio/index.html', '/admin/': 'admin/index.html' };
 const pageFor = (p) => PAGES[p] || PAGES[p.replace(/index\.html$/, '')];
 // "/studio" -> "/studio/" (keeps ?edit=...)
-app.get('/studio', (req, res, next) => (req.path === '/studio' ? res.redirect(301, `/studio/${req.originalUrl.slice('/studio'.length)}`) : next()));
+app.get('/studio', (req, res, next) => (req.path === '/studio' ? res.redirect(301, `${PREFIX}/studio/${req.url.slice('/studio'.length)}`) : next()));
 
 if (DEV) {
   // appType "custom": Vite serves the code, styles and public files; the pages are sent here,
@@ -543,10 +549,11 @@ if (DEV) {
 
 // 404: a page for browsers, a short answer for everything else (images, scripts, API calls)
 const NOT_FOUND_PAGE = path.join(ROOT, 'server', '404.html');
+const notFoundHtml = await fs.readFile(NOT_FOUND_PAGE, 'utf8');
 app.use((req, res) => {
   res.status(404);
   if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts(['html', 'json', 'text']) === 'html') {
-    return res.set('Cache-Control', 'no-store').sendFile(NOT_FOUND_PAGE);
+    return res.set('Cache-Control', 'no-store').type('html').send(notFoundHtml.replaceAll('href="/', `href="${PREFIX}/`));
   }
   if (req.accepts(['json', 'text']) === 'json') return res.json({ error: 'Not found' });
   res.type('text').send('Not found');
@@ -563,7 +570,7 @@ app.use((req, res) => {
 const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
 const paint = (open, close) => (t) => (useColor ? `\x1b[${open}m${t}\x1b[${close}m` : String(t));
 const c = { green: paint(32, 39), cyan: paint(36, 39), yellow: paint(33, 39), bold: paint(1, 22), dim: paint(2, 22) };
-const url = (host) => c.cyan(`http://${host}:${c.bold(PORT)}/`);
+const url = (host) => c.cyan(`http://${host}:${c.bold(PORT)}${PREFIX}/`);
 let viteVersion = '';
 try {
   viteVersion = (await import('vite')).version; // a dev dependency; may be missing in production installs

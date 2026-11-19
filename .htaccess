@@ -1,0 +1,9 @@
+# Place this file in the cloned project folder mapped to /Eye-Shade/.
+# Apache requires AllowOverride All and mod_rewrite, mod_proxy, mod_proxy_http.
+Options -Indexes
+DirectoryIndex disabled
+RewriteEngine On
+
+# Forward ALL requests to Node; never expose source, .env or storage directly.
+# Node serves dist/ and protects the API and uploaded files.
+RewriteRule ^(.*)$ http://127.0.0.1:4015/Eye-Shade/$1 [P,L]

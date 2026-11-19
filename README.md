@@ -42,7 +42,7 @@ stores the doctors' photos and portraits.
 npm install
 npm run dev       # development: http://localhost:5173/  (/studio/, /admin/)
 npm run build     # production build into dist/
-npm start         # production: serves dist/ + the API on http://localhost:3000/
+npm start         # production: serves dist/ + the API on http://localhost:4015/
 ```
 
 Deploy to a host that runs Node (not a static-only host), with `npm run build && npm start`.
@@ -92,3 +92,52 @@ It reuses the studio's shade and frame data; its images live in `public/landing-
 Copy `face_landmarker.task` and the `tasks-vision/wasm` folder into `public/` and point `MODEL_URL` / `WASM_URL` / `BUNDLE_URL` in `faceLandmarks.js` at them.
 
 - `src/components/ExportButton.jsxx` — Downloads the finalized 1000×1000 composite PNG.
+
+## AWS deployment at https://doctorly.in/Eye-Shade/
+
+Use Node.js 22.13+ and keep the Node process running. Apache alone cannot run
+sign-in, SQLite, uploads, or the admin API. Do not serve the repository as static files.
+
+```bash
+git clone https://github.com/NK102006/World_sight_day_project.git
+cd World_sight_day_project
+cp .env.example .env
+# Edit .env: set a strong ADMIN_PASSWORD. Defaults are /Eye-Shade/ and port 4015.
+npm ci
+npm run build
+npm start
+```
+
+The build is written to `dist/`; Node serves it directly from this clone folder.
+APP_BASE_PATH must be the same for the build and the running server. Rebuild after
+changing it. For local root development set APP_BASE_PATH=/ and PORT=5173.
+Do not install production-only dependencies before building (Vite is required).
+Use a service manager such as systemd to restart `npm start` after reboots.
+Back up `storage/` and retain it between deployments.
+
+In the existing Apache **HTTPS virtual host** for doctorly.in, add these rules
+before any catch-all proxy rules, then validate and reload Apache:
+
+```apache
+ProxyPreserveHost On
+RequestHeader set X-Forwarded-Proto "https"
+RedirectMatch 301 ^/Eye-Shade$ /Eye-Shade/
+ProxyPass        /Eye-Shade/ http://127.0.0.1:4015/Eye-Shade/
+ProxyPassReverse /Eye-Shade/ http://127.0.0.1:4015/Eye-Shade/
+```
+
+Enable Apache proxy, proxy_http, headers and alias modules. The public domain
+must already point to this instance and have its HTTPS certificate configured.
+Keep port 4015 private; public traffic should enter through Apache on HTTPS.
+
+Alternatively, when Apache maps /Eye-Shade/ to the clone folder, the included
+root `.htaccess` proxies requests to Node on port 4015. It requires mod_rewrite,
+mod_proxy, mod_proxy_http and `AllowOverride All` for that folder. Configure
+`ProxyPreserveHost On`, `ProxyPassReverse` and the forwarded HTTPS header in the
+HTTPS virtual host as above. Use either virtual-host proxy routing or .htaccess
+routing. Do not rewrite directly into dist: that bypasses the required backend.
+
+`.env` is ignored for new files, but if Git already tracks it, remove it from
+tracking before your next commit (`git rm --cached .env`). Keep the local copy.
+Rotate any credentials previously committed to Git. No build output, dependencies,
+or uploaded doctor data should be committed.
