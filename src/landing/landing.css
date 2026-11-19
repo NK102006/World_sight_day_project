@@ -1,0 +1,66 @@
+/* Styles for the landing page only. The studio's src/index.css is untouched. */
+@import '@fontsource/public-sans/400.css';
+@import '@fontsource/public-sans/500.css';
+@import '@fontsource/public-sans/600.css';
+@import '@fontsource/zilla-slab/500.css';
+@import '@fontsource/zilla-slab/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+  }
+  h1 {
+    text-wrap: balance;
+  }
+  /* Visible keyboard focus */
+  :focus-visible {
+    outline: 2px solid #0F2A2E;
+    outline-offset: 3px;
+  }
+}
+
+/* Eye blink: the eye closes briefly every 7 seconds (compositor-only transform) */
+@keyframes fx-blink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  95.5% { transform: scaleY(0.06); }
+}
+.fx-blink {
+  transform-origin: 50% 50%;
+  animation: fx-blink 7s cubic-bezier(.4, 0, .2, 1) 2.5s infinite;
+}
+
+/* Gold button sheen: a soft light bar that sweeps across on hover / keyboard focus */
+.sheen {
+  transform: translateX(-160%) skewX(-18deg);
+}
+@media (hover: hover) {
+  .group:hover > .sheen {
+    transform: translateX(380%) skewX(-18deg);
+    transition: transform 0.85s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+.group:focus-visible > .sheen {
+  transform: translateX(380%) skewX(-18deg);
+  transition: transform 0.85s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-blink {
+    animation: none;
+  }
+  .sheen {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

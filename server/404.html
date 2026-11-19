@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0B2326" />
+    <title>Page not found · Eye Shade Studio</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%230B2326'/%3E%3Cpath d='M6.5 20C11 13.2 15.4 10.6 20 10.6S29 13.2 33.5 20C29 26.8 24.6 29.4 20 29.4S11 26.8 6.5 20Z' fill='%23fff'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23FF6B4A'/%3E%3Ccircle cx='20' cy='20' r='2.6' fill='%230B2326'/%3E%3C/svg%3E"
+    />
+    <!--
+      404 page for every address the site does not have (served by server/index.mjs).
+      Self-contained: no build step, no external files. Same colours as the studio.
+    -->
+    <style>
+      :root {
+        --paper: #f4f0e6;
+        --card: #fffdf8;
+        --ink: #0f2a2e;
+        --soft: #4f6466;
+        --faint: #8a9b9b;
+        --line: #dcd5c4;
+        --teal: #0e5e5e;
+        --stage: #0b2326;
+        --coral: #ff6b4a;
+        --lens: #3fa7d6;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        background: var(--paper)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M20 15h4v5h5v4h-5v5h-4v-5h-5v-4h5z' fill='%230F2A2E' fill-opacity='0.028'/%3E%3C/svg%3E");
+        color: var(--ink);
+        font-family: Manrope, 'Segoe UI', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .serif { font-family: Fraunces, Georgia, 'Times New Roman', serif; }
+      .mono { font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace; }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 1100px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 18px 20px 14px;
+        border-bottom: 2px solid var(--ink);
+      }
+      header a { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+      .logo { width: 44px; height: 44px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; flex-shrink: 0; }
+      .brand { font-size: 21px; font-weight: 600; line-height: 1; }
+      .brand-sub { margin-top: 4px; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
+
+      main { flex: 1; display: grid; place-items: center; padding: 32px 16px 48px; }
+      .card {
+        width: 100%;
+        max-width: 560px;
+        background: var(--card);
+        border: 1.5px solid var(--line);
+        border-radius: 28px;
+        padding: 34px 28px 30px;
+        text-align: center;
+        box-shadow: 0 40px 80px -45px rgba(15, 42, 46, 0.45);
+        animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal); }
+
+      /* "4 (eye) 4": the zero is an eye that blinks and looks around */
+      .code {
+        margin: 14px 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: clamp(5.5rem, 22vw, 8.5rem);
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .eye { width: 0.95em; height: 0.95em; flex-shrink: 0; }
+      .lid { transform-origin: 50% 50%; animation: blink 5s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite; }
+      .iris { animation: look 6s ease-in-out 0.8s infinite; }
+
+      h1 { font-size: clamp(1.5rem, 5vw, 1.95rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
+      h1 em { color: var(--teal); }
+      p.lead { margin: 12px auto 0; max-width: 420px; font-size: 15px; font-weight: 500; line-height: 1.6; color: var(--soft); }
+      .path {
+        display: inline-block;
+        margin-top: 14px;
+        max-width: 100%;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: #ffe3da;
+        color: #b3391c;
+        font-size: 12px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .path:empty { display: none; }
+
+      /* Flat line that finds its pulse again */
+      .ecg { display: block; width: 100%; height: 46px; margin: 18px 0 4px; }
+      .ecg path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 2.6s cubic-bezier(0.4, 0.1, 0.3, 1) 0.4s infinite; }
+
+      .actions { margin-top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s, transform 0.15s;
+      }
+      .btn:active { transform: scale(0.98); }
+      .btn-dark { background: var(--ink); color: #fff; }
+      .btn-dark:hover { background: var(--teal); }
+      .btn-line { border: 1.5px solid var(--ink); color: var(--ink); }
+      .btn-line:hover { background: rgba(15, 42, 46, 0.06); }
+      :focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+
+      @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+      @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } }
+      @keyframes look { 0%, 20%, 100% { transform: translateX(0); } 35%, 50% { transform: translateX(-5px); } 65%, 80% { transform: translateX(5px); } }
+      @keyframes draw { 0% { stroke-dashoffset: 1; } 70%, 100% { stroke-dashoffset: 0; } }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation: none !important; transition: none !important; }
+        .ecg path { stroke-dashoffset: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/" aria-label="Eye Shade Studio home">
+        <span class="logo">
+          <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+            <path d="M2 16 Q16 3 30 16 Q16 29 2 16 Z" fill="#F4F0E6" />
+            <circle cx="16" cy="16" r="6.5" fill="#3FA7D6" />
+            <circle cx="16" cy="16" r="2.8" fill="#0F2A2E" />
+            <circle cx="14.2" cy="14.2" r="1.1" fill="#fff" />
+          </svg>
+        </span>
+        <span>
+          <span class="brand serif" style="display: block">Eye Shade Studio</span>
+          <span class="brand-sub mono" style="display: block">World Sight Day</span>
+        </span>
+      </a>
+    </header>
+
+    <main>
+      <div class="card">
+        <p class="label mono">Error 404 · Page not found</p>
+
+        <div class="code serif" role="img" aria-label="404">
+          <span aria-hidden="true">4</span>
+          <svg class="eye" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="48" fill="#0B2326" />
+            <g class="lid">
+              <path d="M10 50 C 28 24, 72 24, 90 50 C 72 76, 28 76, 10 50 Z" fill="#FFFDF8" />
+              <g class="iris">
+                <circle cx="50" cy="50" r="17" fill="#3FA7D6" />
+                <circle cx="50" cy="50" r="7.5" fill="#0F2A2E" />
+                <circle cx="45" cy="45" r="3" fill="#fff" />
+              </g>
+            </g>
+          </svg>
+          <span aria-hidden="true">4</span>
+        </div>
+
+        <h1 class="serif">We checked everywhere. <em>No pulse</em> on this page.</h1>
+        <p class="lead">The link may be old or mistyped, or this page has already been discharged. Let’s get you back to the right ward.</p>
+        <span class="path mono" id="path"></span>
+
+        <svg class="ecg" viewBox="0 0 500 46" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            pathLength="1"
+            d="M0 26 H190 l10 -18 l12 34 l10 -28 l8 12 H330 l8 -10 l10 20 l8 -10 H500"
+            fill="none"
+            stroke="#FF6B4A"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            vector-effect="non-scaling-stroke"
+          />
+        </svg>
+
+        <div class="actions">
+          <a class="btn btn-dark" href="/">← Back to home</a>
+          <a class="btn btn-line" href="/studio/">Open the studio</a>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Show which address was not found (as plain text)
+      var shown = location.pathname;
+      try { shown = decodeURI(shown); } catch (e) { /* keep it encoded */ }
+      document.getElementById('path').textContent = shown + location.search;
+    </script>
+  </body>
+</html>

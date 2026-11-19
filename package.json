@@ -1,0 +1,35 @@
+{
+  "name": "eye-shade-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eye Shade Studio - See Yourself in a New Shade (World Sight Day Personalized Photo Studio)",
+  "dependencies": {
+    "@fontsource/fraunces": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
+    "@fontsource/public-sans": "^5.3.0",
+    "@fontsource/zilla-slab": "^5.3.0",
+    "express": "^4.21.2",
+    "framer-motion": "^11.18.2",
+    "install": "^0.13.0",
+    "lucide-react": "^0.344.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.4"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server/index.mjs --dev",
+    "build": "vite build",
+    "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server/index.mjs",
+    "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

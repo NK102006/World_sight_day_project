@@ -1,0 +1,5 @@
+node_modules/
+dist/
+# Doctors' uploaded photos, downloaded portraits and records: personal data, never commit
+storage/
+

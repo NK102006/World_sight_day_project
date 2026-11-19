@@ -1,0 +1,109 @@
+/* Studio and admin styles. The landing page has its own (src/landing/landing.css). */
+@import '@fontsource/manrope/500.css';
+@import '@fontsource/manrope/600.css';
+@import '@fontsource/manrope/700.css';
+@import '@fontsource/manrope/800.css';
+@import '@fontsource/fraunces/500.css';
+@import '@fontsource/fraunces/600.css';
+@import '@fontsource/fraunces/600-italic.css';
+@import '@fontsource/fraunces/700-italic.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-paper font-ui text-ink antialiased; }
+  :focus-visible { outline: 2px solid #FF6B4A; outline-offset: 2px; }
+  /* Hide Edge's own password-reveal and clear buttons; our sign-in forms have their own show/hide button */
+  input::-ms-reveal, input::-ms-clear { display: none; }
+}
+
+/* Loading sweep over the portrait while eyes are detected */
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.fx-sweep::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%); animation: sweep 1.6s ease-in-out infinite; }
+
+/* The one page-load moment: the portrait settles onto the stage */
+@keyframes settle { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+.settle { animation: settle 0.8s cubic-bezier(.2,.7,.2,1) both; }
+
+/* The drag hint shows briefly, then clears off the portrait */
+@keyframes hintOut { to { opacity: 0; visibility: hidden; } }
+.hint-out { animation: hintOut 0.4s ease 5s forwards; }
+
+/* Page entrance: header drops in, intro and steps rise one after another (--d = delay) */
+@keyframes fx-drop { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes fx-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.fx-drop { animation: fx-drop 0.6s cubic-bezier(.2,.7,.2,1) both; }
+.fx-rise { animation: fx-rise 0.6s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0s); }
+
+/* Selection feedback: the chosen shade swatch pops, the chosen frame tile settles */
+@keyframes fx-pop { 0% { transform: scale(0.9); } 55% { transform: scale(1.14); } 100% { transform: scale(1.05); } }
+.fx-pop { animation: fx-pop 0.38s cubic-bezier(.2,.7,.2,1); }
+@keyframes fx-pop-soft { 0% { transform: scale(0.95); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+.fx-pop-soft { animation: fx-pop-soft 0.35s cubic-bezier(.2,.7,.2,1); }
+
+/* 1.5s "applying" transition when the shade or frame changes. The eye bloom /
+   frame wipe itself is driven from CanvasPreview.jsx; these are the status pill
+   and the gold progress line along the bottom. Keep 1.5s in step with APPLY_MS. */
+@keyframes fx-apply-bar { 0% { transform: scaleX(0); opacity: 1; } 85% { opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+.fx-apply-bar { transform-origin: left; animation: fx-apply-bar 1.5s cubic-bezier(.4,.1,.3,1) both; }
+@keyframes fx-apply-pill {
+  0% { opacity: 0; transform: translateY(6px) scale(0.94); }
+  12% { opacity: 1; transform: none; }
+  85% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(4px); }
+}
+.fx-apply-pill { animation: fx-apply-pill 1.5s cubic-bezier(.2,.7,.2,1) both; }
+
+/* Strength slider: a teal fill on a measuring scale, with a coral ring for the thumb */
+input[type='range'].shade-range { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: linear-gradient(to right, #0E5E5E var(--fill), #DCD5C4 var(--fill)); }
+input[type='range'].shade-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 999px; background: #FFFDF8; border: 3px solid #FF6B4A; box-shadow: 0 1px 3px rgba(15,42,46,.25); cursor: pointer; }
+input[type='range'].shade-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 999px; background: #FFFDF8; border: 3px solid #FF6B4A; cursor: pointer; }
+.scale-ticks { background-image: repeating-linear-gradient(90deg, rgba(15,42,46,.55) 0 1.5px, transparent 1.5px 100%), repeating-linear-gradient(90deg, rgba(15,42,46,.3) 0 1px, transparent 1px 100%); background-size: calc((100% - 1.5px) / 4) 100%, calc((100% - 1px) / 20) 55%; background-repeat: repeat-x; background-position: left bottom, left bottom; }
+
+/* Heartbeat line in the header: it redraws (one pulse) whenever the portrait changes */
+@keyframes fx-ecg { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.fx-ecg { stroke-dasharray: 1; stroke-dashoffset: 0; animation: fx-ecg 1.1s cubic-bezier(.4,.1,.3,1) both; }
+
+/* Measuring-scale ticks along the top of the dark stage */
+.stage-ruler { background-image: repeating-linear-gradient(90deg, rgba(211,236,228,.38) 0 1px, transparent 1px 12px); }
+
+/* "Done" tag on a step card */
+@keyframes fx-tag { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+.fx-tag { animation: fx-tag .3s cubic-bezier(.2,.7,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+
+/* ---- Studio form: colour-coded step cards ---------------------------------------- */
+
+/* Faint medical-cross pattern behind the studio */
+.studio-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M20 15h4v5h5v4h-5v5h-4v-5h-5v-4h5z' fill='%230F2A2E' fill-opacity='0.028'/%3E%3C/svg%3E");
+}
+
+/* Cards lift on hover and glow in their step colour while being used */
+.step-card .step-body { box-shadow: 0 1px 0 rgba(15,42,46,.04); }
+@media (hover: hover) {
+  .step-card:hover .step-body { transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgba(15,42,46,.35); }
+}
+.step-card:focus-within .step-body {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent), 0 14px 30px -18px rgba(15,42,46,.35);
+}
+
+/* The step icon gives a little wiggle on hover */
+@keyframes fx-wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-12deg) scale(1.08); } 60% { transform: rotate(9deg) scale(1.08); } }
+.step-card:hover .step-icon { animation: fx-wiggle .55s cubic-bezier(.3,.7,.3,1); }
+
+/* Progress note slides in when it changes */
+@keyframes fx-note { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.fx-note { animation: fx-note .4s cubic-bezier(.2,.7,.2,1) both; }
+
+/* Inside a step card, the slider takes the step's colour */
+.step-card input[type='range'].shade-range { background: linear-gradient(to right, var(--accent) var(--fill), #DCD5C4 var(--fill)); }
+
+/* Coral pulse running down the form's wave (step 1 -> step 4) */
+@keyframes fx-flow { from { stroke-dashoffset: 0.12; } to { stroke-dashoffset: -1; } }
+.fx-flow { stroke-dasharray: 0.12 1; animation: fx-flow 5s linear infinite; filter: drop-shadow(0 0 4px rgba(255,107,74,.7)); }
